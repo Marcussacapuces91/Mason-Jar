@@ -1,3 +1,6 @@
+# Tous les secrets
+secret*.*
+
 # Prerequisites
 *.d
 
