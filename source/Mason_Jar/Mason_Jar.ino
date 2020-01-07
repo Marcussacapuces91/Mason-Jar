@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
-#define FASTLED_ESP8266_NODEMCU_PIN_ORDER
-#include <FastLED.h>
+// #define FASTLED_ESP8266_NODEMCU_PIN_ORDER
+// #include <FastLED.h>
 #include <ESP8266WiFi.h>
+#include <PubSubClient.h>
+#include "App.h"
 
 static const uint8_t NUM_LEDS = 5;
 
@@ -24,19 +26,33 @@ static const uint8_t NUM_LEDS = 5;
 static const String ssid(SECRET_SSID);
 static const String password(SECRET_PASSWORD);
 
-CRGB l1[NUM_LEDS];
-CRGB l2[NUM_LEDS];
+
+#if 1
+App app( "192.168.1.35" );
+#else
+App app( "broker.mqttdashboard.com", 8000 );
+#endif
+
+// CRGB l1[NUM_LEDS];
+// CRGB l2[NUM_LEDS];
+
+void callback(const char* topic, byte* payload, unsigned int length) {
+  app.received(topic, payload, length);
+}
+
 
 /**
  * Fonction d'initialisation de l'application
  */
 void setup() { 
   Serial.begin(115200);
-  Serial.println(__FILE__);
-  Serial.println("Copyright 2000 - Marc SIBERT");
-  Serial.println(__DATE__ "T" __TIME__);
+  delay(1000);
   
-  Serial.print("Connecting to ");
+  Serial.println(__FILE__);
+  Serial.println(__DATE__ "T" __TIME__);
+  Serial.println(F("Copyright 2000 - Marc SIBERT"));
+  
+  Serial.print(F("Connecting to "));
   Serial.println(ssid);
 
   WiFi.mode(WIFI_STA);
@@ -45,12 +61,19 @@ void setup() {
     delay(500);
     Serial.print(".");
   }
-  Serial.println("WiFi connected");
-  Serial.print("IP address: ");
+  Serial.println("");
+  
+  Serial.println(F("WiFi connected"));
+  Serial.print(F("IP address: "));
   Serial.println(WiFi.localIP());
 
+  app.setup();
+
+  
+/*
   FastLED.addLeds<NEOPIXEL, 2>(l1, NUM_LEDS);
   FastLED.addLeds<NEOPIXEL, 1>(l2, NUM_LEDS);
+*/  
 }
 
 /**
@@ -60,6 +83,10 @@ void loop() {
   static uint8_t hue = 0; 
   static const uint8_t v = 64;
 
+  app.loop();
+
+
+/*
   l1[0] = CHSV(hue, 255, v);
   l1[1] = CHSV(32 + hue, 255, v);
   l1[2] = CHSV(64 + hue, 255, v);
@@ -73,4 +100,5 @@ void loop() {
   l2[4] = CHSV(16 + 128 + hue++, 255, v);
 
   FastLED.delay(30);
+*/  
 }
