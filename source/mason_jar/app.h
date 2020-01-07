@@ -75,20 +75,28 @@ public:
 
 protected:
   boolean connect() {
-    const String hello( F("mason-jar/hello") );
-    const String will( nom + F(" disconnected!") );
-    
-    if (!mqtt.connect(nom.c_str(), "marc", "", hello.c_str(), 0, false, will.c_str())) {
+    StaticJsonDocument<JSON_OBJECT_SIZE(2)> doc;
+    doc["verb"] = "disconnect";
+    doc["source"] = nom.c_str();
+        
+    const String path( F("mason-jar/hello") );
+    String will;
+    serializeJson(doc, will);
+    if (!mqtt.connect(nom.c_str(), path.c_str(), 0, false, will.c_str())) {
       Serial.print(F("Connexion impossible ("));
       Serial.print(mqtt.state());
       Serial.println(F(")!"));
       return false;
     }
+    
     const String commande(F("mason-jar/command/#"));
     mqtt.subscribe(commande.c_str(), 1);  // Qos = 1
     
-    const String connected( nom + F(" connected.") );
-    mqtt.publish(hello.c_str(), connected.c_str());
+    doc["verb"] = "connect";
+    String msg;
+    serializeJson(doc, msg);
+    mqtt.publish(path.c_str(), msg.c_str());
+
     return true;
   }
 
