@@ -22,12 +22,12 @@
    and ...
 """
 
+import logging
 import paho.mqtt.client as mqtt
 import re
 import json
 
-def on_message_hello(client, self, message):
-    print(message.topic+" "+str(message.payload))
+logging.basicConfig(level=logging.DEBUG)
 
 class App:
     def __init__(self, host="localhost", port=1883):
@@ -37,12 +37,17 @@ class App:
         
         self._client = mqtt.Client(self._nom)
         self._client.will_set("mason-jar/hello/{}".format(self._nom), '{"verb":"disconnect"}', qos=0, retain=False)
-        self._client.connect(self._host, self._port)
+        try:
+            self._client.connect(self._host, self._port)
+        except Exception as e :
+            logging.critical(e)
+            exit(1)
+            
         self._client.loop_start()
 
         err = self._client.publish("mason-jar/hello/{}".format(self._nom), '{"verb":"connect"}')
         if err.rc != 0:
-            console.log( "Erreur de connexion ({})!".format(err.rc) )
+            logging.critical( "Erreur de publication ({})!".format(err.rc) )
             exit(err.rc)
 
         self._client.message_callback_add("mason-jar/hello/#", self.on_message_hello)
@@ -51,10 +56,17 @@ class App:
     def on_message_hello(self, client, userdata, message):
         print(message.topic+" "+str(message.payload))
         sp = re.split(r'/', message.topic, 3)
-        msg = json.loads( message.payload.decode('utf-8') )
-        if msg['verb'] == 'connect' :
-            print("{} as connected.".format(sp[2]))
-            self._client.publish("mason-jar/command/{}".format(sp[2]), '{"verb":"init"}')
+        try:
+            msg = json.loads( message.payload.decode('utf-8') )
+            if msg['verb'] == 'connect' :
+                print("{} as connected.".format(sp[2]))
+                self._client.publish("mason-jar/command/{}".format(sp[2]), '{"verb":"init"}')
+            else:
+                logging.warning("Verbe non reconnu ({})!".format(msg['verb']))
+
+        except JSONDecodeError:
+            logging.warning("Message non décodé ({})!".format(message.payload.decode('utf-8')))
+            
         
         
 
