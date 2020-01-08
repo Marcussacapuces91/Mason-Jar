@@ -75,11 +75,10 @@ public:
 
 protected:
   boolean connect() {
-    StaticJsonDocument<JSON_OBJECT_SIZE(2)> doc;
+    StaticJsonDocument<JSON_OBJECT_SIZE(1)> doc;
     doc["verb"] = "disconnect";
-    doc["source"] = nom.c_str();
         
-    const String path( F("mason-jar/hello") );
+    const String path( String(F("mason-jar/hello/")) + nom );
     String will;
     serializeJson(doc, will);
     if (!mqtt.connect(nom.c_str(), path.c_str(), 0, false, will.c_str())) {
