@@ -26,11 +26,12 @@ import logging
 import paho.mqtt.client as mqtt
 import re
 import json
+import time
 
 logging.basicConfig(level=logging.DEBUG)
 
 class App:
-    def __init__(self, host="localhost", port=1883):
+    def __init__(self, host="morsang", port=1883):
         self._host = host
         self._port = port
         self._nom = "control"
@@ -54,13 +55,16 @@ class App:
         self._client.subscribe("mason-jar/#")
         
     def on_message_hello(self, client, userdata, message):
-        print(message.topic+" "+str(message.payload))
+        logging.debug("{} {}".format( message.topic, str(message.payload)) )
         sp = re.split(r'/', message.topic, 3)
         try:
             msg = json.loads( message.payload.decode('utf-8') )
             if msg['verb'] == 'connect' :
-                print("{} as connected.".format(sp[2]))
+                logging.debug("{} has connected.".format(sp[2]))
                 self._client.publish("mason-jar/command/{}".format(sp[2]), '{"verb":"init"}')
+                logging.debug("Sent command Init to {}.".format(sp[2]))
+            elif msg['verb'] == 'disconnect' :
+                logging.debug("{} has disconnected!".format(sp[2]))
             else:
                 logging.warning("Verbe non reconnu ({})!".format(msg['verb']))
 
@@ -68,10 +72,9 @@ class App:
             logging.warning("Message non décodé ({})!".format(message.payload.decode('utf-8')))
             
         
-        
 
 if __name__ == '__main__':
     app = App()
     while True:
-        pass
+        time.sleep(0.1)
     

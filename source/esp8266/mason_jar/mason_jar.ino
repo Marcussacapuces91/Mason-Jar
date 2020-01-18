@@ -14,10 +14,7 @@
  * limitations under the License.
  */
 
-// #define FASTLED_ESP8266_NODEMCU_PIN_ORDER
-// #include <FastLED.h>
 #include <ESP8266WiFi.h>
-#include <PubSubClient.h>
 #include "App.h"
 
 static const uint8_t NUM_LEDS = 5;
@@ -27,17 +24,13 @@ static const String ssid(SECRET_SSID);
 static const String password(SECRET_PASSWORD);
 
 
-#if 1
-App app( "192.168.1.35" );
-#else
-App app( "broker.mqttdashboard.com", 8000 );
-#endif
+// App app( "192.168.1.2" );
 
-// CRGB l1[NUM_LEDS];
+CRGB l1[16];
 // CRGB l2[NUM_LEDS];
 
 void callback(const char* topic, byte* payload, unsigned int length) {
-  app.received(topic, payload, length);
+//  app.received(topic, payload, length);
 }
 
 
@@ -51,7 +44,8 @@ void setup() {
   Serial.println(__FILE__);
   Serial.println(__DATE__ "T" __TIME__);
   Serial.println(F("Copyright 2000 - Marc SIBERT"));
-  
+
+#if 0  
   Serial.print(F("Connecting to "));
   Serial.println(ssid);
 
@@ -68,10 +62,11 @@ void setup() {
   Serial.println(WiFi.localIP());
 
   app.setup();
-
+#endif
   
+
+  FastLED.addLeds<NEOPIXEL, 1>(l1, 16);
 /*
-  FastLED.addLeds<NEOPIXEL, 2>(l1, NUM_LEDS);
   FastLED.addLeds<NEOPIXEL, 1>(l2, NUM_LEDS);
 */  
 }
@@ -83,22 +78,12 @@ void loop() {
   static uint8_t hue = 0; 
   static const uint8_t v = 64;
 
-  app.loop();
+//  app.loop();
 
+  for (int i = 0; i < 4; ++i) 
+    for (int j = 0; j < 4; ++j) 
+      l1[i * 4 + j] = CHSV((hue + int(round(50*sqrt((i-1.5)*(i-1.5)+(j-1.5)*(j-1.5))))) % 256, 255, v);
 
-/*
-  l1[0] = CHSV(hue, 255, v);
-  l1[1] = CHSV(32 + hue, 255, v);
-  l1[2] = CHSV(64 + hue, 255, v);
-  l1[3] = CHSV(96 + hue, 255, v);
-  l1[4] = CHSV(128 + hue, 255, v);
-
-  l2[0] = CHSV(16 + hue, 255, v);
-  l2[1] = CHSV(16 + 32 + hue, 255, v);
-  l2[2] = CHSV(16 + 64 + hue, 255, v);
-  l2[3] = CHSV(16 + 96 + hue, 255, v);
-  l2[4] = CHSV(16 + 128 + hue++, 255, v);
-
-  FastLED.delay(30);
-*/  
+  hue += 1;
+  FastLED.delay(10);
 }

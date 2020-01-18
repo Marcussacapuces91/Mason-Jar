@@ -18,6 +18,11 @@
 
 #include <list>
 #include <ArduinoJson.h>
+#include <PubSubClient.h>
+
+#define FASTLED_ESP8266_NODEMCU_PIN_ORDER
+#include <FastLED.h>
+
 
 void callback(const char*, byte*, unsigned int);
 
